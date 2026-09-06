@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>无限大 · 我的世界服务器</title>
+    <!-- 使用 Zpix 完整中文像素字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Zpix&display=swap" rel="stylesheet">
+    <!-- 后备英文字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* 全局强制使用 Zpix，这是目前最完整的中文像素字体 */
+        * {
+            font-family: 'Zpix', 'Press Start 2P', 'Courier New', monospace !important;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            /* 禁用抗锯齿，强制像素感 */
+            -webkit-font-smoothing: none;
+            -moz-osx-font-smoothing: grayscale;
+            font-smooth: never;
+        }
+
+        /* 重置 & 基础 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1a1a1a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            background-image:
+                linear-gradient(rgba(40, 40, 50, 0.6) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(40, 40, 50, 0.6) 1px, transparent 1px);
+            background-size: 32px 32px;
+            background-color: #1f1f2a;
+        }
+
+        /* 主面板 - 移动优先 */
+        .mc-panel {
+            max-width: 720px;
+            width: 100%;
+            background: #2b2b3a;
+            border: 4px solid #6b6b7a;
+            border-radius: 20px;
+            padding: 1.5rem 1.2rem;
+            box-shadow:
+                0 0 0 3px #3d3d4d,
+                inset 0 -6px 0 #3d3d4d,
+                0 12px 30px rgba(0, 0, 0, 0.8);
+            position: relative;
+            background-image:
+                repeating-linear-gradient(45deg, #333344 0px, #333344 2px, #2a2a38 2px, #2a2a38 4px);
+            background-blend-mode: overlay;
+            transition: 0.2s;
+        }
+
+        /* 顶部装饰 */
+        .mc-panel::before {
+            content: "▲";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff7e4a;
+            font-size: 28px;
+            text-shadow: 0 4px 0 #5a2a1a;
+            filter: drop-shadow(0 6px 0 #1f1f2a);
+        }
+
+        /* 服务器头部 */
+        .server-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            position: relative;
+        }
+
+        .icon-frame {
+            background: #3d3d5a;
+            padding: 8px;
+            border: 4px solid #7a7a8a;
+            border-radius: 16px;
+            box-shadow: inset 0 -4px 0 #222233, 0 8px 0 #1a1a2a;
+            margin-bottom: 0.6rem;
+            width: 96px;
+            height: 96px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: linear-gradient(135deg, #4a4a5e 0%, #2f2f44 100%);
+        }
+
+        .icon-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: pixelated;
+            border-radius: 8px;
+            background: #1f1f30;
+            display: block;
+        }
+
+        .fallback-pixel {
+            font-size: 3.8rem;
+            color: #f5c542;
+            text-shadow: 3px 3px 0 #7a621f;
+            line-height: 1;
+        }
+
+        .server-name {
+            font-size: 2.4rem;
+            font-weight: 400;
+            letter-spacing: 4px;
+            color: #f7e05e;
+            text-shadow:
+                4px 4px 0 #7a621f,
+                0 6px 0 #3d2e0e;
+            margin-top: 2px;
+            background: #1f1f30;
+            padding: 0.1rem 1.2rem;
+            border-radius: 40px;
+            border: 2px solid #6b6b7a;
+            box-shadow: inset 0 -3px 0 #2a2a3a;
+            display: inline-block;
+            transform: rotate(-0.5deg);
+            word-break: keep-all;
+        }
+
+        .server-sub {
+            color: #b0c4de;
+            font-size: 0.7rem;
+            background: #1f1f30;
+            padding: 0.2rem 1.2rem;
+            border-radius: 30px;
+            border: 2px solid #4a4a5e;
+            margin-top: 0.3rem;
+            box-shadow: inset 0 -3px 0 #2f2f40;
+            letter-spacing: 1px;
+        }
+
+        /* 系统检测 - 紧凑 */
+        .os-detector {
+            background: #1f1f30;
+            border: 3px solid #5a5a6e;
+            border-radius: 40px;
+            padding: 0.3rem 1rem 0.3rem 0.8rem;
+            margin: 0.2rem 0 1.2rem 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #d4e0ff;
+            font-size: 0.7rem;
+            box-shadow: inset 0 -4px 0 #2f2f40;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .os-detector i {
+            font-size: 1.5rem;
+            color: #f5c542;
+            filter: drop-shadow(0 3px 0 #5a451a);
+        }
+
+        .os-badge {
+            background: #2f2f46;
+            padding: 0.1rem 0.8rem;
+            border-radius: 30px;
+            font-weight: bold;
+            color: #f7eabe;
+            border: 2px solid #5a5a6e;
+            box-shadow: inset 0 -3px 0 #1f1f30;
+            font-size: 0.6rem;
+            letter-spacing: 1px;
+        }
+
+        /* 链接卡片 - 移动优化，堆叠 */
+        .links-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            margin: 1.2rem 0 1rem;
+        }
+
+        .link-card {
+            background: #2f2f46;
+            border: 4px solid #5a5a6e;
+            border-radius: 20px;
+            padding: 1rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.8rem;
+            box-shadow:
+                inset 0 -6px 0 #1f1f30,
+                0 8px 0 #12121c;
+            transition: 0.08s linear;
+            background-image:
+                repeating-linear-gradient(45deg, #38384e 0px, #38384e 3px, #2e2e44 3px, #2e2e44 6px);
+        }
+
+        .link-card:hover {
+            transform: translateY(-2px);
+            box-shadow: inset 0 -6px 0 #1f1f30, 0 12px 0 #12121c;
+            border-color: #7a7a8e;
+        }
+        .link-card:active {
+            transform: translateY(4px);
+            box-shadow: inset 0 -2px 0 #1f1f30, 0 4px 0 #12121c;
+        }
+
+        .link-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex: 1;
+        }
+
+        .link-info i {
+            font-size: 2.4rem;
+            width: 2.8rem;
+            color: #f5c542;
+            text-shadow: 3px 3px 0 #5a451a;
+            filter: drop-shadow(0 0 4px #f5c54255);
+        }
+
+        .link-text {
+            text-align: left;
+            flex: 1;
+        }
+
+        .link-text h3 {
+            color: #f0f4ff;
+            font-size: 1.1rem;
+            font-weight: 400;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0 #1a1a2a;
+            margin-bottom: 2px;
+        }
+
+        .link-text span {
+            color: #a7b9e0;
+            font-size: 0.6rem;
+            display: inline-block;
+            background: #1f1f30;
+            padding: 0.1rem 0.8rem;
+            border-radius: 20px;
+            border: 1px solid #4a4a5e;
+        }
+
+        .btn-download {
+            background: #f5c542;
+            border: 4px solid #7a621f;
+            padding: 0.6rem 1rem;
+            border-radius: 40px;
+            font-weight: 400;
+            font-size: 0.75rem;
+            color: #1d1d2a;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 6px 0 #5a451a, 0 4px 12px #00000066;
+            transition: 0.08s linear;
+            cursor: pointer;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 0 #ffe082;
+            border-style: outset;
+            width: 100%;
+        }
+
+        .btn-download i {
+            font-size: 1rem;
+            color: #1f1f2a;
+            text-shadow: none;
+        }
+
+        .btn-download:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #5a451a;
+        }
+
+        .btn-download:hover {
+            background: #fad55e;
+            border-color: #8f6f1f;
+        }
+
+        /* 整合包卡片特殊 */
+        .modpack-card {
+            border-color: #4a7aff;
+            box-shadow: inset 0 -6px 0 #1f2a5a, 0 8px 0 #12121c;
+        }
+        .modpack-card .link-info i {
+            color: #6f8cff;
+            text-shadow: 3px 3px 0 #1f3190;
+        }
+        .modpack-card .btn-download {
+            background: #4a6cf7;
+            border-color: #1f3190;
+            box-shadow: 0 6px 0 #1f3190, 0 4px 12px #00000066;
+            color: white;
+            text-shadow: 0 1px 0 #7b95ff;
+        }
+        .modpack-card .btn-download i {
+            color: white;
+        }
+        .modpack-card .btn-download:hover {
+            background: #5f7cf7;
+            border-color: #2f4aaf;
+        }
+
+        /* 底部 */
+        .footer-note {
+            margin-top: 1.5rem;
+            color: #7a8aaa;
+            font-size: 0.5rem;
+            border-top: 4px solid #3d3d5a;
+            padding-top: 1.2rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem 1.2rem;
+        }
+
+        .footer-note i {
+            color: #f5c542;
+            margin-right: 4px;
+            text-shadow: 2px 2px 0 #2a2a3a;
+        }
+
+        .footer-note a {
+            color: #b4c5f0;
+            text-decoration: none;
+            border-bottom: 2px dashed #4e5d84;
+            padding-bottom: 2px;
+            transition: 0.1s;
+        }
+
+        .footer-note a:hover {
+            color: #f7e05e;
+            border-bottom: 2px solid #f7e05e;
+        }
+
+        /* 大屏微调 */
+        @media (min-width: 600px) {
+            .link-card {
+                flex-direction: row;
+                align-items: center;
+                padding: 1rem 1.8rem;
+            }
+            .btn-download {
+                width: auto;
+                padding: 0.7rem 1.6rem;
+                font-size: 0.8rem;
+            }
+            .mc-panel {
+                padding: 2rem 2rem;
+            }
+            .server-name {
+                font-size: 2.8rem;
+            }
+            .icon-frame {
+                width: 110px;
+                height: 110px;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .server-name {
+                font-size: 1.8rem;
+                letter-spacing: 2px;
+                padding: 0.1rem 0.8rem;
+            }
+            .link-info i {
+                font-size: 1.8rem;
+                width: 2.2rem;
+            }
+            .link-text h3 {
+                font-size: 0.9rem;
+            }
+            .os-detector {
+                font-size: 0.6rem;
+                padding: 0.2rem 0.6rem;
+            }
+            .os-badge {
+                font-size: 0.5rem;
+                padding: 0.05rem 0.6rem;
+            }
+            .btn-download {
+                font-size: 0.65rem;
+                padding: 0.5rem 0.8rem;
+            }
+        }
+
+        /* 强制所有文字使用 Zpix，禁用抗锯齿 */
+        .server-name, .server-sub, .link-text h3, .link-text span, .os-badge, .btn-download, .footer-note, .os-detector {
+            font-family: 'Zpix', 'Press Start 2P', monospace !important;
+            -webkit-font-smoothing: none;
+            -moz-osx-font-smoothing: grayscale;
+            font-smooth: never;
+            text-rendering: optimizeSpeed;
+        }
+    </style>
+</head>
+<body>
+    <div class="mc-panel">
+        <!-- 服务器头部 -->
+        <div class="server-header">
+            <div class="icon-frame">
+                <!-- 使用本地 server-icon.png 作为图标 -->
+                <img src="server-icon.png" 
+                     alt="无限大图标"
+                     id="serverIcon"
+                     onerror="this.style.display='none'; document.getElementById('iconFallback').style.display='flex';" />
+                <div id="iconFallback" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; background: #1f1f30; border-radius: 8px;">
+                    <span class="fallback-pixel">∞</span>
+                </div>
+            </div>
+            <div class="server-name">无限大</div>
+            <div class="server-sub"><i class="fas fa-pickaxe" style="margin-right: 6px;"></i> 生存 · 创造 · 无限</div>
+        </div>
+
+        <!-- 系统检测 -->
+        <div class="os-detector" id="osDetector">
+            <i class="fas fa-desktop"></i>
+            <span>系统</span>
+            <span class="os-badge" id="osBadge">检测中...</span>
+        </div>
+
+        <!-- 下载卡片 -->
+        <div class="links-grid">
+            <!-- 启动器 -->
+            <div class="link-card" id="launcherCard">
+                <div class="link-info">
+                    <i class="fas fa-rocket"></i>
+                    <div class="link-text">
+                        <h3>启动器</h3>
+                        <span id="launcherDesc">自动适配</span>
+                    </div>
+                </div>
+                <a href="#" class="btn-download" id="launcherBtn">
+                    <i class="fas fa-download"></i> 下载
+                </a>
+            </div>
+
+            <!-- 整合包 -->
+            <div class="link-card modpack-card">
+                <div class="link-info">
+                    <i class="fas fa-cubes"></i>
+                    <div class="link-text">
+                        <h3>整合包</h3>
+                        <span>无限包 · 1.20.1</span>
+                    </div>
+                </div>
+                <a href="#" class="btn-download" id="modpackBtn">
+                    <i class="fas fa-download"></i> 获取
+                </a>
+            </div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer-note">
+            <span><i class="fas fa-server"></i> 无限大</span>
+            <span><i class="fas fa-code-branch"></i> 持续更新</span>
+            <span><a href="#"><i class="fas fa-question-circle"></i> 帮助</a></span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            const osBadge = document.getElementById('osBadge');
+            const launcherBtn = document.getElementById('launcherBtn');
+            const launcherDesc = document.getElementById('launcherDesc');
+
+            // 替换为真实链接
+            const LINKS = {
+                windows: 'https://ltcat.lanzouv.com/i748D41287qj',
+                android: 'https://gh-proxy.org/https://github.com/ZalithLauncher/ZalithLauncher2/releases/download/2.4.11/ZalithLauncher-2.4.11-arm64-v8a.apk',
+                default: 'https://ltcat.lanzouv.com/i748D41287qj',
+                modpack: 'https://gh-proxy.org/https://github.com/ruoshuiyun/mc_resource/raw/refs/heads/main/InfiniteMC.zip'
+            };
+
+            function detectOS() {
+                const ua = navigator.userAgent || navigator.platform || '';
+                if (/Windows/i.test(ua)) return 'Windows';
+                if (/Android/i.test(ua)) return 'Android';
+                return 'Other';
+            }
+
+            function updateUI(os) {
+                let osDisplay = os;
+                let icon = 'fa-desktop';
+                if (os === 'Windows') {
+                    osDisplay = 'Windows';
+                    icon = 'fa-windows';
+                } else if (os === 'Android') {
+                    osDisplay = 'Android';
+                    icon = 'fa-android';
+                } else {
+                    osDisplay = '其他';
+                    icon = 'fa-globe';
+                }
+                osBadge.textContent = osDisplay;
+
+                const detectorIcon = document.querySelector('.os-detector i');
+                if (detectorIcon) {
+                    detectorIcon.className = `fas ${icon}`;
+                }
+
+                let downloadUrl = LINKS.default;
+                let descText = '通用版 (Jar)';
+                if (os === 'Windows') {
+                    downloadUrl = LINKS.windows;
+                    descText = 'Windows 版 (exe)';
+                } else if (os === 'Android') {
+                    downloadUrl = LINKS.android;
+                    descText = 'Android 版 (apk)';
+                } else {
+                    downloadUrl = LINKS.default;
+                    descText = '跨平台通用';
+                }
+
+                if (launcherBtn) {
+                    launcherBtn.href = downloadUrl;
+                    launcherBtn.setAttribute('download', '');
+                    if (downloadUrl === '#') {
+                        launcherBtn.href = '#';
+                        launcherBtn.removeAttribute('download');
+                    }
+                }
+                if (launcherDesc) {
+                    launcherDesc.textContent = descText;
+                }
+
+                const modpackBtn = document.getElementById('modpackBtn');
+                if (modpackBtn) {
+                    modpackBtn.href = LINKS.modpack;
+                    modpackBtn.setAttribute('download', '');
+                }
+            }
+
+            const detectedOS = detectOS();
+            updateUI(detectedOS);
+
+            // 拦截空链接
+            document.querySelectorAll('.btn-download').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (!href || href === '#' || href === '') {
+                        e.preventDefault();
+                        alert('下载链接未配置，请联系管理员。');
+                    }
+                });
+            });
+
+            console.log(`[无限大] 系统: ${detectedOS} 启动器已适配`);
+        })();
+    </script>
+</body>
+</html>
